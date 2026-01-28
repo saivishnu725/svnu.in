@@ -70,7 +70,7 @@ This script is intended to be run via cron.
 Current cron entry:
 
 ```cron
-0 3 * * * cd /var/www/svnu.in && ./generate_indexes.sh >/dev/null 2>&1
+*/15 * * * * cd /var/www/svnu.in && ./generate_indexes.sh >/dev/null 2>&1
 ````
 
 ---

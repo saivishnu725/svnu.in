@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>docker networking | notes | svnu.in</title>
+
+  <style>
+    :root {
+      --bg: #0c0c0c;
+      --fg: #eaeaea;
+      --dim: #6b7280;
+      --accent: #22d3ee;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 16px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .prompt { color: var(--accent); }
+    .dim { color: var(--dim); }
+
+    h1, h2 {
+      font-weight: normal;
+      margin-top: 2em;
+    }
+
+    ul {
+      list-style: "- ";
+      padding-left: 1em;
+    }
+
+    code, pre {
+      background: #111;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    pre {
+      padding: 12px;
+      margin: 1em 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="dim">
+  notes / docker-networking
+</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ less docker-networking.txt</span>
+
+<h1>docker networking (quick notes)</h1>
+
+<ul>
+  <li>default bridge is fine for local dev</li>
+  <li>user-defined bridge gives automatic DNS</li>
+  <li>containers can talk via service name</li>
+</ul>
+
+<h2>useful commands</h2>
+
+<pre>
+docker network ls
+docker network inspect bridge
+docker network create mynet
+</pre>
+
+<h2>things to revisit</h2>
+
+<ul>
+  <li>iptables rules Docker injects</li>
+  <li>rootless networking quirks</li>
+  <li>macvlan vs bridge</li>
+</ul>
+
+<p class="dim">
+  last updated: 2026-01-28
+</p>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

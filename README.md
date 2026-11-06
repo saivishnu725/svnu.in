@@ -77,7 +77,7 @@ The script:
 
 ## Deployment
 
-The site is served by nginx from a Proxmox LXC container on my home server.
+The site is served by nginx (in Docker) from a Proxmox LXC container on my home server.
 The repo is cloned at `/root/nginx/html`.
 
 `pull_and_index.sh` keeps it up to date. Every run it:
@@ -112,7 +112,7 @@ no packages) listens on `127.0.0.1:8725` and nginx forwards `/cv/upload` to it.
 - only accepts real pdfs, 10 MB max
 - the systemd unit can only write to `cv/`
 
-One-time setup inside the container:
+One-time setup in the LXC (not inside the nginx docker container):
 
 ```bash
 cd /root/nginx/html
@@ -122,7 +122,19 @@ systemctl daemon-reload
 systemctl enable --now svnu-cv-upload
 ```
 
-nginx config:
+nginx runs in Docker (`nginx:alpine`) on the host network, so it can reach
+the upload service on `127.0.0.1:8725`:
+
+```bash
+docker run -d --name nginx \
+  --restart unless-stopped \
+  --network host \
+  -v /root/nginx/conf.d:/etc/nginx/conf.d \
+  -v /root/nginx/html:/usr/share/nginx/html \
+  nginx:alpine
+```
+
+nginx config, `/root/nginx/conf.d/default.conf`:
 
 ```nginx
 server {
@@ -136,9 +148,14 @@ server {
         try_files $uri $uri/ =404;
     }
 
-    # svnu.in/cv and svnu.in/cv/ open the resume
-    location = /cv  { try_files /cv/resume.pdf =404; }
-    location = /cv/ { try_files /cv/resume.pdf =404; }
+    # svnu.in/cv, svnu.in/cv/ and svnu.in/cv/resume.pdf all serve the resume
+    location ~ ^/cv(/|/resume\.pdf)?$ {
+        try_files /cv/resume.pdf =404;
+        # name it properly when saved, still opens in the browser
+        add_header Content-Disposition 'inline; filename="saivishnu_MCA.pdf"';
+        # cloudflare would otherwise keep serving the old pdf after an upload
+        add_header Cache-Control "no-cache";
+    }
 
     # old versions stay on disk but aren't public
     location ~ ^/cv/resume_.+\.pdf$ { deny all; }
@@ -157,12 +174,9 @@ server {
 }
 ```
 
-If nginx runs in Docker, `127.0.0.1` is the nginx container itself, not the
-host. In that case make the service listen on the docker bridge instead
-(add `Environment=CV_HOST=172.17.0.1` to the unit) and point `proxy_pass`
-at `http://172.17.0.1:8725` (run `ip -4 addr show docker0` to confirm the IP).
+After editing it: `docker exec nginx nginx -t && docker exec nginx nginx -s reload`
 
-Then `nginx -t && systemctl reload nginx`.
+HTTPS is handled by Cloudflare in front.
 
 Logs: `journalctl -u svnu-cv-upload`
 

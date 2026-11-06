@@ -22,7 +22,9 @@ No frameworks, no JavaScript, no trackers — just text and files.
 ├── notes/
 │   ├── index.html          # auto-generated
 │   └── sample_note.html
-└── generate_indexes.sh     # cron-driven index generator
+├── generate_indexes.sh     # builds the blog/notes indexes
+├── md_to_html.sh           # converts .md posts to .html (run locally)
+└── pull_and_index.sh       # cron job on the server: git pull + indexes
 
 ```
 
@@ -65,13 +67,28 @@ The script:
 - Strips redundant suffixes like `| svnu.in`
 - Generates clean index pages with links
 
-This script is intended to be run via cron.
+---
 
-Current cron entry:
+## Deployment
+
+The site is served by nginx from a Proxmox LXC container on my home server.
+The repo is cloned at `/root/nginx/html`.
+
+`pull_and_index.sh` keeps it up to date. Every run it:
+- does a `git pull --ff-only`
+- reruns `generate_indexes.sh` if the pull brought anything new (or an index is missing)
+- skips the run if the previous one is still going (`flock`)
+
+So publishing is just: write the post, run `md_to_html.sh` locally, commit, push.
+The server picks it up within 5 minutes.
+
+Current cron entry (root's crontab inside the container):
 
 ```cron
-*/15 * * * * cd /var/www/svnu.in && ./generate_indexes.sh >/dev/null 2>&1
-````
+*/5 * * * * /root/nginx/html/pull_and_index.sh >> /var/log/svnu-pull.log 2>&1
+```
+
+It only logs when something changed, so `/var/log/svnu-pull.log` stays small.
 
 ---
 

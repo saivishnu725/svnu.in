@@ -1,0 +1,16 @@
+[Unit]
+Description=svnu.in cv upload handler
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /root/nginx/html/server/cv_upload.py
+Restart=on-failure
+
+# can only write to the cv folder, nothing else
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/nginx/html/cv
+
+[Install]
+WantedBy=multi-user.target

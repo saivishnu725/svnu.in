@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>cv upload | svnu.in</title>
+
+  <style>
+    :root {
+      --bg: #0c0c0c;
+      --fg: #eaeaea;
+      --dim: #6b7280;
+      --accent: #22d3ee;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 720px;
+      margin: 48px auto;
+      padding: 0 16px;
+    }
+
+    .prompt {
+      color: var(--accent);
+    }
+
+    .out {
+      color: var(--dim);
+      margin: 0.3em 0 1.3em 0;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    label {
+      display: block;
+      color: var(--dim);
+      margin: 1em 0 0.3em 0;
+    }
+
+    input, button {
+      font: inherit;
+      color: var(--fg);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 3px;
+      padding: 6px 10px;
+      width: 100%;
+      max-width: 360px;
+      box-sizing: border-box;
+    }
+
+    input:focus, button:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    input[type="file"]::file-selector-button {
+      font: inherit;
+      color: var(--accent);
+      background: none;
+      border: none;
+      padding: 0 1em 0 0;
+      cursor: pointer;
+    }
+
+    button {
+      width: auto;
+      margin-top: 1.5em;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+<span class="prompt">sai@svnu.in</span>:<span>~/cv$ cat README</span>
+<div class="out">
+  replaces <a href="/cv/resume.pdf">resume.pdf</a>.<br>
+  the current one gets kept with a timestamp.
+</div>
+
+<span class="prompt">sai@svnu.in</span>:<span>~/cv$ ./upload</span>
+
+<form class="out" action="/cv/upload" method="post" enctype="multipart/form-data">
+  <label for="resume">file (pdf, 10 MB max) →</label>
+  <input id="resume" name="resume" type="file" accept="application/pdf,.pdf" required>
+
+  <label for="password">password →</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+  <button type="submit">upload</button>
+</form>
+
+<span class="prompt">sai@svnu.in</span>:<span>~/cv$</span>
+
+</body>
+</html>

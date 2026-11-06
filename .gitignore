@@ -3,3 +3,5 @@ notes/index.html
 .md_stamps/
 blogs/certs/
 blogs/contris/
+cv/*.pdf
+__pycache__/

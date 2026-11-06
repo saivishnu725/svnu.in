@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>01 - blinking an LED | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 06 / 01 blinking an led</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 01_blinking_an_led.md</span>
+
+<h1 id="blinking-an-led">01 - blinking an LED</h1>
+<p>welcome back to my Arduino series, where i will be going through my Uno kit in a feeble attempt to learn more about this field.</p>
+<h2 id="introduction">01 - introduction</h2>
+<p>lets get started by trying to blink some lights. we need the following items:</p>
+<ol type="1">
+<li>1 x the Uno board</li>
+<li>1 x bread board</li>
+<li>1 x LED (i chose Green)</li>
+<li>1 x 220 ohm resistor</li>
+</ol>
+<h3 id="a-hardware">01.a hardware</h3>
+<p><img src="00a-blinking-led.png" alt="00a-blinking-led.png" width="248"> copyright issues related to copying this image aside, this is a visual of the flow of current through our system. a pin (say 8) passed the current to a resistor that converts it down to a state where an LED can function without going kaboom, then the LED does its magic by connecting to ground (GND) and completing the loop. “that’s so simple”, i say.</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

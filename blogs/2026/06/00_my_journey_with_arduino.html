@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>00 - my journey with arduino | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 06 / 00 my journey with arduino</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 00_my_journey_with_arduino.md</span>
+
+<h1 id="my-journey-with-arduino">00 - my journey with arduino</h1>
+<h2 id="abstract">abstract</h2>
+<p>i have had this <a href="https://amzn.in/d/08826aXs">Epictac Super Starter Kit 020</a> for a year or two now. it has always been on my table. it has never left my sight (exaggeration).</p>
+<p>unfortunately, i never got the right timing to do anything out of it of course. don’t get me wrong, i did give it some try. it just so happens to be that i suck at sticking to anything. i would get to blinking an LED every 500 ms and that’s where my brain would jump to the next interesting thing.</p>
+<p>to overcome this obstacle, i’ve decided to write a series to blog posts going through everything i learn in the process. this would act as a barrier stopping me from escaping. i will try to cover as many sensors from this kit as i can. i will try to use a few more that i find online. the series might derail into fun sub-projects towards the end. only time will tell.</p>
+<p>this is a sort of digital journal to keep track of progress and know what i’ve achieved over time.</p>
+<p>lets first start with what i have access to. there is an <a href="https://store-usa.arduino.cc/products/arduino-uno-rev3">Arduino Uno R3</a>, a breadboard, loads of LEDs, wires, different ohm resistors and a bunch of weird looking sensors.</p>
+<p>i feel like the first task for anyone tinkering with Uno is to blink an LED. easy, right? we will find out.</p>
+<h2 id="introduction">00 introduction</h2>
+<h3 id="a--tools">00.a- tools</h3>
+<p>in order to make our Uno to blink an LED, we have to setup our software stack. i did that by installing <a href="https://github.com/arduino/arduino-ide/">Arduino IDE</a>. since, i am on Linux (i use arch btw), i had to enable <a href="https://wiki.archlinux.org/title/Arduino#Accessing_serial"><strong><em>serial access</em></strong></a> to my personal/regular user. a quick reboot and then we are all set.</p>
+<p>on first glance, there was a button to compile, another button to upload, a drop-down menu to select the device and a code editor. in this editor, there was a template waiting for me. ### 00.b - code logic the language is called <code>Processing</code> and it is fairly similar to C++ (as it is built upon it) with a custom head file for amateur programmers.</p>
+<pre class="cpp"><code>void setup() {
+// put your setup code here, to run once:
+}
+
+void loop() {
+// put your main code here, to run repeatedly:
+}</code></pre>
+<p>there are two sections (functions) in every logic. the <code>setup()</code> is run once at the beginning/start. what i’ve understood so far is that we can initialise devices or define pin types here. second is a function called <code>loop()</code> where the proper logic goes in. this function… you guessed it… <strong>loops</strong> till the end of time in the universe (or until our board is out of power to run).</p>
+<h3 id="c---basic-hardware">00.c - basic hardware</h3>
+<p>there are some pieces of hardware that are used across all projects. i will go over some of the items and explain everything i know about them (so far)</p>
+<ol type="1">
+<li><p>bread board</p>
+<p><img src="00b-breadboard.png" alt="00b-breadboard.png"></p>
+<p>this is called <strong>breadboard</strong> and it is backbone to connected multiple items together. this is done by looking at the layout below.</p>
+<p><img src="00c-breadboard-layout.png" alt="00c-breadboard-layout.png"></p>
+<p>the lines are how they (all the pins) are connected. so any wire/sensor/device plugged into a pin is accessible by all the other pins in the same connection.</p></li>
+<li><p>Arduino Uno</p>
+<p><img src="00d-arduino-uno.png" alt="00d-arduino-uno.png"></p>
+<p>this is the actual circuit board that does all the thinking and working. for now (blinking an LED), all we need to know are the Digital I/O pins (2-13) that can be used to send signals and Digital ground (GND) to close the circuit.</p></li>
+<li><p>a 220 ohm resistor</p>
+<p><img src="00e-resistor.png" alt="00e-resistor.png"></p>
+<p>why is it 220? i’m not sure. it just is. we will learn more about it when the time comes (i hope). these help regulate the current or else the LED will explode. i found that using a more powerful resistor made the LED really dim. so i feel like maybe 220 is the sweet spot.</p></li>
+<li><p>LED</p>
+<p><img src="00f-green-led.png" alt="00f-green-led.png"></p>
+<p>this is an LED. it has a long sleeve and a shorter one. the shorter sleeve goes into ground (GND).</p></li>
+<li><p>jumper wires</p>
+<p>we all know what wires look like. they help connect pieces together.</p></li>
+</ol>
+<h2 id="disclaimer">disclaimer</h2>
+<p>some (most) of these terms are not accurate. i am just typing these as a mental note. i am not a electrical engineer nor have i studied Physics in years (6 years as of 2026). i don’t know (don’t remember) how electricity works and i don’t claim to be an expert on this matter.</p>
+<h2 id="credits">credits</h2>
+<p>all credits goes to me (svnu©️). i am writing this entire series and all the code without the use of any LLM. i want it to be 100% #brainmade and meaningful.</p>
+<p>see you guys in the next chapter: <a href="01_blinking_an_led.html">01 - blinking an LED</a>.</p>
+<p>laters! svnu©️ 16-June-2026 14:14</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

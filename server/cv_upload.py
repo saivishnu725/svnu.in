@@ -47,8 +47,8 @@ def _scrypt(pw, salt):
 
 def set_password():
     pw = getpass.getpass("new password: ")
-    if len(pw) < 12:
-        sys.exit("use at least 12 characters")
+    if len(pw) < 10:
+        sys.exit("use at least 10 characters")
     if pw != getpass.getpass("again: "):
         sys.exit("passwords don't match")
     salt = secrets.token_bytes(16)

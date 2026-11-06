@@ -193,7 +193,9 @@ for search_dir in "$BLOGS_DIR" "$NOTES_DIR"; do
       touch_stamp "$md"
       (( converted++ )) || true
     fi
-  done < <(find "$search_dir" -type f -name "*.md" -print0)
+  done < <(find "$search_dir" -type f -name "*.md" \
+             -not -path "$BLOGS_DIR/certs/*" \
+             -not -path "$BLOGS_DIR/contris/*" -print0)
 done
  
 if (( converted == 0 )); then

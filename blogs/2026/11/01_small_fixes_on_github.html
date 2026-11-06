@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>01 - small fixes on github | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 11 / 01 small fixes on github</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 01_small_fixes_on_github.md</span>
+
+<h1 id="small-fixes-on-github">01 - small fixes on github</h1>
+<p>welcome back. last time was <a href="00_sending_patches_to_the_kernel.html">the kernel stuff</a>. this one is the github side, which is a lot less email and a lot more green buttons.</p>
+<p>both of these came from the same place. i was using the thing, it annoyed me (or broke), and i went and fixed it.</p>
+<h2 id="homebox">00 homebox</h2>
+<h3 id="a---the-problem">00.a - the problem</h3>
+<p><a href="https://github.com/sysadminsmedia/homebox">homebox</a> is a self hosted inventory app for your home. you log what you own, where it is, when you bought it, etc.</p>
+<p>it lets you export everything as a csv. the file was always called <code>homebox-items.csv</code>. every single time. so if you export today and again next week, the new one just replaces the old one. i wanted to keep exports around locally and version them, and that doesn’t really work when they all have the same name.</p>
+<h3 id="b---the-fix">00.b - the fix</h3>
+<p>add the time to the filename. simple enough.</p>
+<pre class="diff"><code>+       timestamp := time.Now().Format(&quot;2006-01-02_15-04-05&quot;) // YYYY-MM-DD_HH-MM-SS format
++       filename := fmt.Sprintf(&quot;homebox-items_%s.csv&quot;, timestamp) // add timestamp to filename
+
+        w.Header().Set(&quot;Content-Type&quot;, &quot;text/csv&quot;)
+-       w.Header().Set(&quot;Content-Disposition&quot;, &quot;attachment;filename=homebox-items.csv&quot;)
++       w.Header().Set(&quot;Content-Disposition&quot;, fmt.Sprintf(&quot;attachment;filename=%s&quot;, filename))</code></pre>
+<p>this was my first PR to anything. ever. also my first time writing Go. i’m not going to pretend i knew what i was doing, the timestamp line came straight from StackOverflow (i even said so in the PR).</p>
+<p>fun thing i learnt: Go doesn’t use <code>%Y-%m-%d</code> like everyone else. you write out a reference date, <code>2006-01-02 15:04:05</code>, in the shape you want and it figures out the format from that. weird. kind of cool. still weird.</p>
+<h3 id="c---what-happened">00.c - what happened</h3>
+<p><a href="https://github.com/sysadminsmedia/homebox/pull/366">#366</a> got merged the same day (2nd December 2024). exports now look like <code>homebox-items_2024-12-02_12-30-00.csv</code>.</p>
+<h2 id="proxmox-ve-helper-scripts">01 proxmox VE helper scripts</h2>
+<h3 id="a---the-problem-1">01.a - the problem</h3>
+<p><a href="https://github.com/community-scripts/ProxmoxVE">community-scripts/ProxmoxVE</a> is a big collection of scripts that spin up LXC containers on Proxmox with an app already installed. you run one command and you have a container with the thing running in it.</p>
+<p>the one for <a href="https://actualbudget.org/">Actual Budget</a> was broken. it died here:</p>
+<pre class="bash"><code>$STD npm install --location=global @actual-app/sync-server</code></pre>
+<p><code>@actual-app/sync-server</code> depends on <code>better-sqlite3</code>, which is a native module. it gets compiled on install, which means it needs a C++ compiler. the script was only installing <code>make</code>.</p>
+<h3 id="b---the-fix-1">01.b - the fix</h3>
+<pre class="diff"><code> $STD apt-get install -y \
+-  make
++  make \
++  g++</code></pre>
+<p>one dependency. that’s the fix.</p>
+<h3 id="c---what-happened-1">01.c - what happened</h3>
+<p><a href="https://github.com/community-scripts/ProxmoxVE/pull/6293">#6293</a> was merged in about 10 minutes (28th July 2025). a maintainer pushed a formatting commit on top of mine before merging, so apparently i can’t even add one line without messing up the indentation. noted again.</p>
+<h2 id="disclaimer">disclaimer</h2>
+<p>neither of these is impressive on its own. a timestamp and a compiler. but both got merged, and both are things that bugged me while using the software. that’s the whole idea. use stuff, find what’s broken, fix it, send it back.</p>
+<p>that’s it for now. more when i break more things.</p>
+<p>laters! svnu©️ 06-November-2026 10:56</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

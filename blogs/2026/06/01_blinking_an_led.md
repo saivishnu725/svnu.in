@@ -1,3 +1,5 @@
+<!-- series: arduino -->
+
 # 01 - blinking an LED
 
 welcome back to my Arduino series, where i will be going through my Uno kit in a feeble attempt to learn more about this field.

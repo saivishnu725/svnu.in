@@ -1,3 +1,5 @@
+<!-- series: qemu edu pci driver -->
+
 # 00 - writing a pci driver for qemu
 
 ## abstract

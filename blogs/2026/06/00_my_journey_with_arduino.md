@@ -1,3 +1,5 @@
+<!-- series: arduino -->
+
 # 00 - my journey with arduino
 
 ## abstract

@@ -1,3 +1,5 @@
+<!-- series: qemu edu pci driver -->
+
 # 02 - interrupts and dma with qemu edu
 
 welcome back. [[03_qemu_pci_driver_setup|last time]] i got the edu device to calculate `5!` by repeatedly checking its status register. that works, but i wanted the device to tell the driver when it was done.

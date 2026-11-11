@@ -37,6 +37,5 @@ else
   log "updated ${before:0:7} → ${after:0:7}"
 fi
 
-# generate_indexes.sh uses $(pwd) as the site root, so we run it from $ROOT
 bash "$ROOT/generate_indexes.sh"
 log "indexes regenerated"

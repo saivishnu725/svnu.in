@@ -1,3 +1,5 @@
+<!-- series: open source contributions -->
+
 # 00 - sending patches to the kernel
 
 ## abstract

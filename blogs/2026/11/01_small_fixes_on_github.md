@@ -1,3 +1,5 @@
+<!-- series: open source contributions -->
+
 # 01 - small fixes on github
 
 welcome back. last time was [[00_sending_patches_to_the_kernel|the kernel stuff]]. this one is the github side, which is a lot less email and a lot more green buttons.

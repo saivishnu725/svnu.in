@@ -73,6 +73,13 @@ The script:
 - Strips redundant suffixes like `| svnu.in`
 - Generates clean index pages with links
 
+Blog posts can be grouped into a series by adding a comment to their Markdown
+source, for example `<!-- series: arduino -->`. Use the same name for every
+post in the series. The index lists series alphabetically and their posts in
+path order, so numbered filenames keep the reading order. HTML-only posts and
+posts without the comment appear under `uncategorised`. Notes remain a flat
+list.
+
 ---
 
 ## Deployment

@@ -1,3 +1,5 @@
+<!-- series: qemu edu pci driver -->
+
 # 01 - setting up the qemu edu lab
 
 welcome back. in [[02_qemu_pci_driver_intro|the last post]] i decided to write a pci driver for qemu's edu device. first i need somewhere to run it and a way to tell if the device is even listening.

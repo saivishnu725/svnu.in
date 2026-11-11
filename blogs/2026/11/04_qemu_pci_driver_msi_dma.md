@@ -144,7 +144,11 @@ DMA round trip: 64 bytes verified
 svnu: edu device removed
 ```
 
-the tests currently run during probe, when the module is loaded. there isn't a userspace interface yet. i want to add that and a test program as the project continues; for now, the bytes made it there and back and the module unloaded without warnings. i'll take it.
+the tests currently run during probe, when the module is loaded. there isn't a userspace interface yet, so that's what i want to work on next, along with a test program to exercise the driver. for now, the bytes made it there and back and the module unloaded without warnings. i'll take it.
+
+## disclaimer
+
+all of this is still pretty new to me. i followed a bunch of tutorials to get here, and i'm not well versed enough to remember all the inputs, defines and function names on my own yet. i do get the overall flow though, and i think with enough practice i'll eventually be able to write all of this without a tutorial open beside me. i'm excited to finish this series and make more projects along the way. hopefully with fewer mysterious timeouts.
 
 laters!
 svnu©️ 11-November-2026

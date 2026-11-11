@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>01 - setting up the qemu edu lab | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 11 / 03 qemu pci driver setup</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 03_qemu_pci_driver_setup.md</span>
+
+<h1 id="setting-up-the-qemu-edu-lab">01 - setting up the qemu edu lab</h1>
+<p>welcome back. in <a href="02_qemu_pci_driver_intro.html">the last post</a> i decided to write a pci driver for qemu’s edu device. first i need somewhere to run it and a way to tell if the device is even listening.</p>
+<h2 id="step-1---a-tiny-linux-guest">step 1 - a tiny linux guest</h2>
+<p>i used a separate worktree of my linux source (~/src/linux; story for another series) and built an x86-64 kernel into a separate directory. the lab used <code>v7.4-rc1</code>. keeping the build separate also means my other kernel work doesn’t move the ground under this module.</p>
+<pre class="sh"><code>git -C ~/src/linux worktree add --detach ~/edu-lab/linux v7.4-rc1
+cd ~/edu-lab
+make -C linux O=&quot;$PWD/build&quot; x86_64_defconfig
+make -C linux O=&quot;$PWD/build&quot; -j&quot;$(nproc)&quot;</code></pre>
+<p>the guest also needs a userspace. i used a statically linked busybox binary in <code>rootfs/bin/busybox</code> and a small <code>/init</code>. an initramfs is a cpio archive that the kernel unpacks into memory and uses as its initial root filesystem. <code>/init</code> is the first userspace process it runs.</p>
+<pre class="sh"><code>#!/bin/busybox sh
+/bin/busybox --install -s
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t devtmpfs none /dev
+echo &quot;svnu edu lab up&quot;
+exec setsid cttyhack sh</code></pre>
+<p>busybox provides the shell and the little commands i need. it has to be static here because i didn’t put any shared libraries in the guest. <code>exec</code> replaces init with the shell; if the first process exits, the kernel is not particularly happy.</p>
+<p>i packed the rootfs and booted it directly, no disk image or bootloader needed:</p>
+<pre class="sh"><code>cd rootfs
+find . -print0 | cpio --null -o -H newc --owner root:root | gzip -9 &gt; ../initramfs.cpio.gz
+cd ..
+qemu-system-x86_64 -enable-kvm -cpu host -m 512M -smp 2 \
+    -kernel build/arch/x86/boot/bzImage -initrd initramfs.cpio.gz \
+    -append &quot;console=ttyS0 nokaslr&quot; -device edu -nographic</code></pre>
+<p><code>-device edu</code> adds our pretend pci card. the serial console and <code>-nographic</code> put the guest in the terminal. inside the guest, <code>lspci -nn</code> showed <code>1234:11e8</code>. the card exists. well, as much as an emulated card can exist.</p>
+<h2 id="step-2---hello-from-the-kernel">step 2 - hello from the kernel</h2>
+<p>before talking to the device i built a hello-world module. a module is code loaded into the running kernel, so no <code>printf</code> or libc here. <code>pr_info</code> writes to the kernel log instead.</p>
+<pre class="c"><code>static int __init hello_init(void)
+{
+    pr_info(&quot;hello from the kernel\n&quot;);
+    return 0;
+}
+
+static void __exit hello_exit(void)
+{
+    pr_info(&quot;goodbye from the kernel\n&quot;);
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+MODULE_LICENSE(&quot;GPL&quot;);</code></pre>
+<p>the module makefile points at the same build directory as the kernel the guest boots:</p>
+<pre class="makefile"><code>obj-m := hello.o edu.o
+KDIR := ../build
+
+all:
+    $(MAKE) -C $(KDIR) M=$(CURDIR) modules</code></pre>
+<p>then the little loop that i would become very familiar with: build the module, copy it into the rootfs, repack the initramfs, boot and load it.</p>
+<pre class="sh"><code>make -C driver
+cp driver/hello.ko rootfs/root/
+./mkinitramfs.sh
+./run.sh
+# inside the guest
+insmod /root/hello.ko
+dmesg | tail
+rmmod hello</code></pre>
+<h2 id="step-3---finding-edu">step 3 - finding edu</h2>
+<p>pci devices have vendor and device IDs in their configuration space. linux discovers the devices and matches those IDs against the driver’s table. for edu they are <code>0x1234</code> and <code>0x11e8</code>.</p>
+<pre class="c"><code>static const struct pci_device_id edu_ids[] = {
+    { PCI_DEVICE(0x1234, 0x11e8) },
+    { }
+};
+MODULE_DEVICE_TABLE(pci, edu_ids);
+
+static struct pci_driver edu_driver = {
+    .name = &quot;edu&quot;,
+    .id_table = edu_ids,
+    .probe = edu_probe,
+    .remove = edu_remove,
+};
+module_pci_driver(edu_driver);</code></pre>
+<p>when a matching device binds, the kernel calls <code>edu_probe()</code> with a <code>struct pci_dev</code>. <code>edu_remove()</code> runs when the device is unbound or the driver is unloaded. the empty entry marks the end of the table. my first probe just printed a message; seeing it meant linux had found both my module and the right device.</p>
+<h2 id="step-4---talking-through-bar0">step 4 - talking through bar0</h2>
+<p>edu exposes its registers through BAR0, a pci memory resource. this is memory-mapped I/O (MMIO): accesses to the mapped region talk to the device instead of ordinary RAM. the <a href="https://www.qemu.org/docs/master/specs/edu.html">edu spec</a> tells us what lives at each offset.</p>
+<p>after enabling the device, i claimed BAR0 and mapped it. the snippets here leave out error handling so the flow is easier to see; the actual driver checks each operation and unwinds on failure.</p>
+<pre class="c"><code>pci_enable_device(pdev);
+pci_request_region(pdev, 0, &quot;edu&quot;);
+bar = pci_iomap(pdev, 0, 0);
+pci_set_drvdata(pdev, bar);</code></pre>
+<p><code>bar</code> is a <code>void __iomem *</code>, not an ordinary pointer to RAM. i use the kernel’s I/O accessors to read and write the registers:</p>
+<pre class="c"><code>u32 id = ioread32(bar + 0x00);
+iowrite32(0x12345678, bar + 0x04);
+u32 liveness = ioread32(bar + 0x04);</code></pre>
+<p><code>0x00</code> is the identification register. <code>0x04</code> is a liveness check: write a 32-bit value and the device returns its bitwise inverse. the guest log said:</p>
+<pre class="text"><code>identification: 0x010000ed
+liveness: wrote 0x12345678, read 0xedcba987</code></pre>
+<p>it inverted my number. communication! not exactly a riveting conversation, but we have to start somewhere.</p>
+<p>on removal the mapping, region and device are released in reverse order: <code>pci_iounmap()</code>, <code>pci_release_region()</code> and <code>pci_disable_device()</code>. failure paths need to release only the resources they actually acquired.</p>
+<h2 id="step-5---factorial-by-polling">step 5 - factorial by polling</h2>
+<p>edu can calculate a factorial. write a number to offset <code>0x08</code>, wait for the busy bit at <code>0x20</code> to clear, then read the result from <code>0x08</code>.</p>
+<pre class="c"><code>iowrite32(5, bar + 0x08);
+ret = readl_poll_timeout(bar + 0x20, status,
+                         !(status &amp; 0x01), 100, 1000000);
+if (ret)
+    /* handle timeout */;
+factorial = ioread32(bar + 0x08);</code></pre>
+<p>this checks every 100 microseconds, with a one second timeout. the result was <code>5! = 120</code>. i now have an entire virtual computer to do something my calculator can do. progress.</p>
+<p>i also managed to fall through into the error cleanup after a successful probe. the calculation worked, but unloading produced warnings because the resources had already been released. a <code>return 0</code> before the cleanup labels fixed that: successful probe keeps the resources until <code>remove</code>.</p>
+<p>polling works, but the device can also tell us when it is done. that’s where <a href="04_qemu_pci_driver_msi_dma.html">the next post</a> starts.</p>
+<p>laters! svnu©️ 11-November-2026</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

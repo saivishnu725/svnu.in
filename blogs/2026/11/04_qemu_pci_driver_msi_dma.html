@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>02 - interrupts and dma with qemu edu | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 11 / 04 qemu pci driver msi dma</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 04_qemu_pci_driver_msi_dma.md</span>
+
+<h1 id="interrupts-and-dma-with-qemu-edu">02 - interrupts and dma with qemu edu</h1>
+<p>welcome back. <a href="03_qemu_pci_driver_setup.html">last time</a> i got the edu device to calculate <code>5!</code> by repeatedly checking its status register. that works, but i wanted the device to tell the driver when it was done.</p>
+<h2 id="step-6---listening-for-an-interrupt">step 6 - listening for an interrupt</h2>
+<p>an interrupt is the device getting the cpu’s attention. edu supports MSI (message signaled interrupts), where the device signals an interrupt using a pci write. linux gives the driver an IRQ number and calls its handler when the interrupt arrives.</p>
+<p>i added a per-device structure to hold the mapped BAR, IRQ and a completion. a completion lets one part of the kernel wait until another part signals that an event has happened.</p>
+<pre class="c"><code>struct edu_device {
+    void __iomem *bar;
+    struct completion factorial_done;
+    int irq;
+};
+
+init_completion(&amp;edu-&gt;factorial_done);
+pci_set_drvdata(pdev, edu);</code></pre>
+<p><code>pci_set_drvdata()</code> lets <code>remove</code> get the same structure back with <code>pci_get_drvdata()</code>. the interrupt handler gets it through its <code>data</code> argument.</p>
+<p>i asked for one MSI vector and registered a threaded handler:</p>
+<pre class="c"><code>pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
+edu-&gt;irq = pci_irq_vector(pdev, 0);
+request_threaded_irq(edu-&gt;irq, NULL, edu_irq_thread,
+                     IRQF_ONESHOT, &quot;edu&quot;, edu);</code></pre>
+<p>the handler reads edu’s interrupt status, acknowledges the bits at <code>0x64</code>, and signals the completion if the factorial bit was set:</p>
+<pre class="c"><code>static irqreturn_t edu_irq_thread(int irq, void *data)
+{
+    struct edu_device *edu = data;
+    u32 status = ioread32(edu-&gt;bar + 0x24);
+
+    if (!status)
+        return IRQ_NONE;
+    iowrite32(status, edu-&gt;bar + 0x64);
+    if (status &amp; 0x01)
+        complete(&amp;edu-&gt;factorial_done);
+    return IRQ_HANDLED;
+}</code></pre>
+<p>then probe can enable factorial interrupts, start the calculation and sleep until the handler wakes it up:</p>
+<pre class="c"><code>iowrite32(0x80, edu-&gt;bar + 0x20); /* enable factorial interrupt */
+iowrite32(5, edu-&gt;bar + 0x08);
+if (!wait_for_completion_timeout(&amp;edu-&gt;factorial_done,
+                                 msecs_to_jiffies(1000)))
+    /* handle timeout */;
+factorial = ioread32(edu-&gt;bar + 0x08);</code></pre>
+<p>i gave it a timeout so a missing interrupt wouldn’t leave probe waiting forever. which turned out to be a good idea, because the first attempt timed out. i tried five seconds too. still nothing. apparently waiting harder is not a debugging technique.</p>
+<h2 id="step-7---letting-the-device-speak">step 7 - letting the device speak</h2>
+<p>the missing piece was bus mastering:</p>
+<pre class="c"><code>pci_enable_device(pdev);
+pci_set_master(pdev);</code></pre>
+<p><code>pci_enable_device()</code> prepares the device for use; <code>pci_set_master()</code> allows it to initiate transactions on the pci bus. MSI is a device-initiated write, so the earlier CPU-initiated MMIO accesses could work while the interrupt did not. after adding that call, the log finally said:</p>
+<pre class="text"><code>factorial: 5! = 120 (MSI)</code></pre>
+<p>on removal i disable the device’s factorial interrupt, free the handler and vector, then unmap and release BAR0 and disable the device. the real code also unwinds these resources if probe fails. a successful result is nice; a successful unload is nicer.</p>
+<h2 id="step-8---giving-edu-some-memory">step 8 - giving edu some memory</h2>
+<p>next up: DMA, or direct memory access. instead of the cpu copying each byte to a device, the driver gives it a memory address and a length and lets the device do the transfer. edu has a separate internal buffer, so this is a different feature from the factorial calculation.</p>
+<p>the address the device uses isn’t necessarily the same as the pointer the cpu uses. an IOMMU, for example, can translate device addresses. the kernel’s <a href="https://docs.kernel.org/core-api/dma-api-howto.html">DMA API</a> gives us the right address instead of guessing from a C pointer.</p>
+<p>by default edu supports 28-bit DMA addresses. i told the kernel about that limit and allocated a 64-byte coherent buffer:</p>
+<pre class="c"><code>dma_set_mask_and_coherent(&amp;pdev-&gt;dev, DMA_BIT_MASK(28));
+edu-&gt;dma_buf = dma_alloc_coherent(&amp;pdev-&gt;dev, 64,
+                                  &amp;edu-&gt;dma_handle, GFP_KERNEL);</code></pre>
+<p><code>dma_buf</code> is the cpu pointer; <code>dma_handle</code> is the address to give edu. coherent memory handles cache visibility for this allocation, though it doesn’t remove the need to order operations properly. the address changed between module loads, which was a good reminder to use the returned handle every time.</p>
+<h2 id="step-9---the-round-trip">step 9 - the round trip</h2>
+<p>edu’s internal 4 KiB DMA buffer starts at device address <code>0x40000</code>. it has source, destination, count and command registers at <code>0x80</code>, <code>0x88</code>, <code>0x90</code> and <code>0x98</code>. i wrote a transfer function to choose a direction and poll the command register until the start bit clears:</p>
+<pre class="c"><code>if (to_ram) {
+    iowrite32(0x40000, edu-&gt;bar + 0x80);
+    iowrite32((u32)edu-&gt;dma_handle, edu-&gt;bar + 0x88);
+    command = 0x01 | 0x02;
+} else {
+    iowrite32((u32)edu-&gt;dma_handle, edu-&gt;bar + 0x80);
+    iowrite32(0x40000, edu-&gt;bar + 0x88);
+    command = 0x01;
+}
+iowrite32(64, edu-&gt;bar + 0x90);
+iowrite32(command, edu-&gt;bar + 0x98);
+ret = readl_poll_timeout(edu-&gt;bar + 0x98, status,
+                         !(status &amp; 0x01), 1000, 1000000);</code></pre>
+<p>bit <code>0x01</code> starts the transfer; <code>0x02</code> selects device-to-guest RAM. the 28-bit mask makes the cast to <code>u32</code> fit here. the DMA test uses polling; the factorial path still uses MSI.</p>
+<p>to check that anything actually moved, i filled guest memory with a pattern, copied it to edu, cleared guest memory, and copied it back:</p>
+<pre class="c"><code>buf = edu-&gt;dma_buf;
+for (i = 0; i &lt; 64; i++)
+    buf[i] = i;
+
+edu_dma_transfer(edu, false); /* guest RAM -&gt; edu */
+memset(buf, 0, 64);
+edu_dma_transfer(edu, true);  /* edu -&gt; guest RAM */
+
+for (i = 0; i &lt; 64; i++)
+    if (buf[i] != i)
+        /* report mismatch */;</code></pre>
+<p>the actual test checks both transfer return values before moving on. if a transfer times out, the driver retains the buffer and asks for a guest reboot: a timeout alone doesn’t prove that the device has stopped using the memory. on a normal unload it frees the coherent buffer.</p>
+<p>and the guest finally gave me this:</p>
+<pre class="text"><code>allocated 64-byte DMA buffer, DMA address: 0x0000000005c1d000
+identification: 0x010000ed
+liveness: wrote 0x12345678, read 0xedcba987
+factorial: 5! = 120 (MSI)
+DMA round trip: 64 bytes verified
+svnu: edu device removed</code></pre>
+<p>the tests currently run during probe, when the module is loaded. there isn’t a userspace interface yet. i want to add that and a test program as the project continues; for now, the bytes made it there and back and the module unloaded without warnings. i’ll take it.</p>
+<p>laters! svnu©️ 11-November-2026</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

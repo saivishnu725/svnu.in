@@ -115,7 +115,7 @@ pci_set_master(pdev);</code></pre>
 <p>on removal i disable the device’s factorial interrupt, free the handler and vector, then unmap and release BAR0 and disable the device. the real code also unwinds these resources if probe fails. a successful result is nice; a successful unload is nicer.</p>
 <h2 id="step-8---giving-edu-some-memory">step 8 - giving edu some memory</h2>
 <p>next up: DMA, or direct memory access. instead of the cpu copying each byte to a device, the driver gives it a memory address and a length and lets the device do the transfer. edu has a separate internal buffer, so this is a different feature from the factorial calculation.</p>
-<p>the address the device uses isn’t necessarily the same as the pointer the cpu uses. an IOMMU, for example, can translate device addresses. the kernel’s <a href="https://docs.kernel.org/core-api/dma-api-howto.html">DMA API</a> gives us the right address instead of guessing from a C pointer.</p>
+<p>the address the device uses isn’t necessarily the same as the pointer the cpu uses. an IOMMU, for example, can translate device addresses. the kernel’s <a href="https://docs.kernel.org/core-api/dma-api-howto.html" target="_blank" rel="noopener noreferrer">DMA API</a> gives us the right address instead of guessing from a C pointer.</p>
 <p>by default edu supports 28-bit DMA addresses. i told the kernel about that limit and allocated a 64-byte coherent buffer:</p>
 <pre class="c"><code>dma_set_mask_and_coherent(&amp;pdev-&gt;dev, DMA_BIT_MASK(28));
 edu-&gt;dma_buf = dma_alloc_coherent(&amp;pdev-&gt;dev, 64,

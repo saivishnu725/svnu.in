@@ -74,7 +74,7 @@
 <p>the kernel does not do pull requests. you write a patch, you email it to a mailing list, and people reply to your email. like it’s 2003. i wanted to learn that, so i went looking for the smallest thing i could fix.</p>
 <h2 id="rust-for-linux">00 rust for linux</h2>
 <h3 id="a---the-issue">00.a - the issue</h3>
-<p><a href="https://rust-for-linux.com/">Rust-for-Linux</a> keeps a bunch of “good first issue” tickets on github. <a href="https://github.com/Rust-for-Linux/linux/issues/1167">#1167</a> was one of them. the doc comment on <code>IoMem</code> in <code>rust/kernel/io.rs</code> looked like this:</p>
+<p><a href="https://rust-for-linux.com/" target="_blank" rel="noopener noreferrer">Rust-for-Linux</a> keeps a bunch of “good first issue” tickets on github. <a href="https://github.com/Rust-for-Linux/linux/issues/1167" target="_blank" rel="noopener noreferrer">#1167</a> was one of them. the doc comment on <code>IoMem</code> in <code>rust/kernel/io.rs</code> looked like this:</p>
 <pre class="rust"><code>/// IO-mapped memory, starting at the base address @addr and spanning @maxlen bytes.</code></pre>
 <p>two things wrong with it.</p>
 <ol type="1">
@@ -86,7 +86,7 @@
 +/// IO-mapped memory region.</code></pre>
 <p>yep. that’s it. that’s the patch.</p>
 <h3 id="c---the-actual-work">00.c - the actual work</h3>
-<p>the one line took a minute. everything around it took way longer. the issue itself spells out what they expect: a proper commit title, signing off under the Developer’s Certificate of Origin, the right tags, testing the docs build. the <a href="https://docs.kernel.org/process/submitting-patches.html">submitting patches</a> doc and the <a href="https://rust-for-linux.com/contributing">rust-for-linux contributing</a> page cover the rest.</p>
+<p>the one line took a minute. everything around it took way longer. the issue itself spells out what they expect: a proper commit title, signing off under the Developer’s Certificate of Origin, the right tags, testing the docs build. the <a href="https://docs.kernel.org/process/submitting-patches.html" target="_blank" rel="noopener noreferrer">submitting patches</a> doc and the <a href="https://rust-for-linux.com/contributing" target="_blank" rel="noopener noreferrer">rust-for-linux contributing</a> page cover the rest.</p>
 <p>the flow, roughly:</p>
 <ol type="1">
 <li>make the change and commit with <code>git commit -s</code> (the <code>-s</code> adds your <code>Signed-off-by</code> line)</li>
@@ -96,12 +96,12 @@
 </ol>
 <p>this is the part i actually wanted to learn. github hides all of this behind a green button.</p>
 <h3 id="d---what-happened">00.d - what happened</h3>
-<p><a href="https://lore.kernel.org/rust-for-linux/20250602164923.48893-2-saivishnu725@gmail.com/">the patch</a> got a <code>Reviewed-by</code> from Benno Lossin and Miguel Ojeda picked it up. he reworded the title to <code>rust: io: avoid mentioning private fields in IoMem</code> and fixed up my tags. so my commit title was not good enough lol. noted.</p>
-<p>it’s in mainline now as <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0303584766b7bdb6564c7e8f13e0b59b6ef44984"><code>0303584766b7</code></a>.</p>
+<p><a href="https://lore.kernel.org/rust-for-linux/20250602164923.48893-2-saivishnu725@gmail.com/" target="_blank" rel="noopener noreferrer">the patch</a> got a <code>Reviewed-by</code> from Benno Lossin and Miguel Ojeda picked it up. he reworded the title to <code>rust: io: avoid mentioning private fields in IoMem</code> and fixed up my tags. so my commit title was not good enough lol. noted.</p>
+<p>it’s in mainline now as <a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0303584766b7bdb6564c7e8f13e0b59b6ef44984" target="_blank" rel="noopener noreferrer"><code>0303584766b7</code></a>.</p>
 <p>my name is in the linux kernel <code>git log</code>. for one line of a doc comment. i’ll take it.</p>
 <h2 id="linux-media-v4l-utils">01 linux media (v4l-utils)</h2>
 <h3 id="a---the-problem">01.a - the problem</h3>
-<p><a href="https://git.linuxtv.org/v4l-utils.git">v4l-utils</a> is the userspace side of video4linux, the stuff that talks to webcams, capture cards, tv tuners and so on. one of the tools in there is <code>v4l2-sysfs-path</code>. it goes through your media devices and tells you which video, audio and other nodes belong to the same piece of hardware.</p>
+<p><a href="https://git.linuxtv.org/v4l-utils.git" target="_blank" rel="noopener noreferrer">v4l-utils</a> is the userspace side of video4linux, the stuff that talks to webcams, capture cards, tv tuners and so on. one of the tools in there is <code>v4l2-sysfs-path</code>. it goes through your media devices and tells you which video, audio and other nodes belong to the same piece of hardware.</p>
 <p>i only know that because i read the source. if you run <code>v4l2-sysfs-path --help</code> you get the list of flags and the version. nothing about WHAT the program is for.</p>
 <p>it uses <code>argp</code> for argument parsing. this is what the struct looked like:</p>
 <pre class="c"><code>static struct argp argp = {
@@ -113,7 +113,7 @@
 <p>i added a help message to <code>v4l2-sysfs-path/v4l2-sysfs-path.c</code> so <code>--help</code> actually tells you what the tool does before dumping the flags on you.</p>
 <!-- TODO: paste the diff from the patch here -->
 <p>this one went to the linux-media list. same email workflow as before, different subsystem, different maintainers. second time around it felt a lot less scary.</p>
-<p>the patch is <a href="https://lore.kernel.org/linux-media/20260623162403.21641-1-saivishnu725@gmail.com/">here</a>.</p>
+<p>the patch is <a href="https://lore.kernel.org/linux-media/20260623162403.21641-1-saivishnu725@gmail.com/" target="_blank" rel="noopener noreferrer">here</a>.</p>
 <!-- TODO: update with status once it gets picked up / reviewed -->
 <h2 id="disclaimer">disclaimer</h2>
 <p>neither of these is real kernel development. one is a doc comment and the other is a help string in a userspace tool. i know. but the hard part for me was never the code, it was figuring out how to get it in front of the right people in the right format. that part i now (kind of) know.</p>

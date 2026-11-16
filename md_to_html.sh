@@ -2,7 +2,7 @@
 # md_to_html.sh — convert new/modified .md files in blogs/ and notes/ to HTML
 # only re-processes changed files.
 #
-# Dependencies: pandoc
+# Dependencies: pandoc, python3
 # Cron example (every 15 min):
 #   */15 * * * * /path/to/md_to_html.sh >> /var/log/md_to_html.log 2>&1
 
@@ -171,6 +171,11 @@ ${body}
 </body>
 </html>
 HTML
+
+  # Apply the same external-link behavior to generated and hand-written pages.
+  local linked
+  linked="$(python3 "$ROOT/external_links.py" < "$out")"
+  printf '%s\n' "$linked" > "$out"
 
   log "converted: $md → $out"
 }

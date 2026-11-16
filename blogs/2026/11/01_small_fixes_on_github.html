@@ -71,7 +71,7 @@
 <p>both of these came from the same place. i was using the thing, it annoyed me (or broke), and i went and fixed it.</p>
 <h2 id="homebox">00 homebox</h2>
 <h3 id="a---the-problem">00.a - the problem</h3>
-<p><a href="https://github.com/sysadminsmedia/homebox">homebox</a> is a self hosted inventory app for your home. you log what you own, where it is, when you bought it, etc.</p>
+<p><a href="https://github.com/sysadminsmedia/homebox" target="_blank" rel="noopener noreferrer">homebox</a> is a self hosted inventory app for your home. you log what you own, where it is, when you bought it, etc.</p>
 <p>it lets you export everything as a csv. the file was always called <code>homebox-items.csv</code>. every single time. so if you export today and again next week, the new one just replaces the old one. i wanted to keep exports around locally and version them, and that doesn’t really work when they all have the same name.</p>
 <h3 id="b---the-fix">00.b - the fix</h3>
 <p>add the time to the filename. simple enough.</p>
@@ -84,11 +84,11 @@
 <p>this was my first PR to anything. ever. also my first time writing Go. i’m not going to pretend i knew what i was doing, the timestamp line came straight from StackOverflow (i even said so in the PR).</p>
 <p>fun thing i learnt: Go doesn’t use <code>%Y-%m-%d</code> like everyone else. you write out a reference date, <code>2006-01-02 15:04:05</code>, in the shape you want and it figures out the format from that. weird. kind of cool. still weird.</p>
 <h3 id="c---what-happened">00.c - what happened</h3>
-<p><a href="https://github.com/sysadminsmedia/homebox/pull/366">#366</a> got merged the same day (2nd December 2024). exports now look like <code>homebox-items_2024-12-02_12-30-00.csv</code>.</p>
+<p><a href="https://github.com/sysadminsmedia/homebox/pull/366" target="_blank" rel="noopener noreferrer">#366</a> got merged the same day (2nd December 2024). exports now look like <code>homebox-items_2024-12-02_12-30-00.csv</code>.</p>
 <h2 id="proxmox-ve-helper-scripts">01 proxmox VE helper scripts</h2>
 <h3 id="a---the-problem-1">01.a - the problem</h3>
-<p><a href="https://github.com/community-scripts/ProxmoxVE">community-scripts/ProxmoxVE</a> is a big collection of scripts that spin up LXC containers on Proxmox with an app already installed. you run one command and you have a container with the thing running in it.</p>
-<p>the one for <a href="https://actualbudget.org/">Actual Budget</a> was broken. it died here:</p>
+<p><a href="https://github.com/community-scripts/ProxmoxVE" target="_blank" rel="noopener noreferrer">community-scripts/ProxmoxVE</a> is a big collection of scripts that spin up LXC containers on Proxmox with an app already installed. you run one command and you have a container with the thing running in it.</p>
+<p>the one for <a href="https://actualbudget.org/" target="_blank" rel="noopener noreferrer">Actual Budget</a> was broken. it died here:</p>
 <pre class="bash"><code>$STD npm install --location=global @actual-app/sync-server</code></pre>
 <p><code>@actual-app/sync-server</code> depends on <code>better-sqlite3</code>, which is a native module. it gets compiled on install, which means it needs a C++ compiler. the script was only installing <code>make</code>.</p>
 <h3 id="b---the-fix-1">01.b - the fix</h3>
@@ -98,7 +98,7 @@
 +  g++</code></pre>
 <p>one dependency. that’s the fix.</p>
 <h3 id="c---what-happened-1">01.c - what happened</h3>
-<p><a href="https://github.com/community-scripts/ProxmoxVE/pull/6293">#6293</a> was merged in about 10 minutes (28th July 2025). a maintainer pushed a formatting commit on top of mine before merging, so apparently i can’t even add one line without messing up the indentation. noted again.</p>
+<p><a href="https://github.com/community-scripts/ProxmoxVE/pull/6293" target="_blank" rel="noopener noreferrer">#6293</a> was merged in about 10 minutes (28th July 2025). a maintainer pushed a formatting commit on top of mine before merging, so apparently i can’t even add one line without messing up the indentation. noted again.</p>
 <h2 id="disclaimer">disclaimer</h2>
 <p>neither of these is impressive on its own. a timestamp and a compiler. but both got merged, and both are things that bugged me while using the software. that’s the whole idea. use stuff, find what’s broken, fix it, send it back.</p>
 <p>that’s it for now. more when i break more things.</p>

@@ -24,6 +24,7 @@ No frameworks, no JavaScript, no trackers — just text and files.
 │   └── sample_note.html
 ├── generate_indexes.sh     # builds the blog/notes indexes
 ├── generate_recent_blogs.sh # updates recent posts on the homepage
+├── external_links.py       # sets external links to open in a new tab
 ├── md_to_html.sh           # converts .md posts to .html (run locally)
 ├── pull_and_index.sh       # cron job on the server: git pull + indexes
 ├── cv/

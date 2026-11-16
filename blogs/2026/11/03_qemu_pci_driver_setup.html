@@ -139,7 +139,7 @@ static struct pci_driver edu_driver = {
 module_pci_driver(edu_driver);</code></pre>
 <p>when a matching device binds, the kernel calls <code>edu_probe()</code> with a <code>struct pci_dev</code>. <code>edu_remove()</code> runs when the device is unbound or the driver is unloaded. the empty entry marks the end of the table. my first probe just printed a message; seeing it meant linux had found both my module and the right device.</p>
 <h2 id="step-4---talking-through-bar0">step 4 - talking through bar0</h2>
-<p>edu exposes its registers through BAR0, a pci memory resource. this is memory-mapped I/O (MMIO): accesses to the mapped region talk to the device instead of ordinary RAM. the <a href="https://www.qemu.org/docs/master/specs/edu.html">edu spec</a> tells us what lives at each offset.</p>
+<p>edu exposes its registers through BAR0, a pci memory resource. this is memory-mapped I/O (MMIO): accesses to the mapped region talk to the device instead of ordinary RAM. the <a href="https://www.qemu.org/docs/master/specs/edu.html" target="_blank" rel="noopener noreferrer">edu spec</a> tells us what lives at each offset.</p>
 <p>after enabling the device, i claimed BAR0 and mapped it. the snippets here leave out error handling so the flow is easier to see; the actual driver checks each operation and unwinds on failure.</p>
 <pre class="c"><code>pci_enable_device(pdev);
 pci_request_region(pdev, 0, &quot;edu&quot;);

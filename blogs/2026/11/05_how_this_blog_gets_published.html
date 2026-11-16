@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>how this blog gets published | svnu.in</title>
+  <style>
+
+  :root {
+    --bg: #0c0c0c;
+    --fg: #eaeaea;
+    --dim: #6b7280;
+    --accent: #22d3ee;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 720px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .prompt { color: var(--accent); }
+  .dim    { color: var(--dim); }
+  h1, h2, h3, h4 { font-weight: normal; margin-top: 2em; }
+  pre, code {
+    background: #111;
+    border-radius: 3px;
+    padding: 2px 5px;
+  }
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    margin: 1.5em 0;
+  }
+  pre code { padding: 0; background: none; }
+  blockquote {
+    border-left: 2px solid var(--accent);
+    margin: 0;
+    padding-left: 1em;
+    color: var(--dim);
+  }
+  img {
+    max-width: 100%;
+    display: block;
+    margin: 1.5em 0;
+  }
+  ul { list-style: '- '; padding-left: 1em; }
+  hr { border: none; border-top: 1px solid #222; margin: 2em 0; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #222; padding: 6px 10px; text-align: left; }
+  th { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<div class="dim">blogs / 2026 / 11 / 05 how this blog gets published</div>
+
+<br>
+
+<span class="prompt">sai@svnu.in</span>:<span>$ cat 05_how_this_blog_gets_published.md</span>
+
+<!-- series: about this site -->
+<h1 id="how-this-blog-gets-published">how this blog gets published</h1>
+<h2 id="abstract">abstract</h2>
+<p>someone asked me if the “auto-generated” at the bottom of the <a href="/blogs/">blogs page</a> meant that the posts were auto-generated. fair question. i knew what i meant, but apparently i forgot that other people can’t read my mind. yet.</p>
+<p>what i meant was that the <em>index</em> is generated automatically. i write the posts in markdown, and a few scripts turn them into pages and put the links in the right place. so here’s what happens between me typing in obsidian and a post showing up on the site.</p>
+<h2 id="writing-in-obsidian">00 - writing in obsidian</h2>
+<p>i write the post in <a href="https://obsidian.md/">obsidian</a>, in markdown. headings, links, code blocks, images, the usual stuff. when i’m happy with it, i copy the <code>.md</code> file into the appropriate year and month under <code>blogs/</code> in the website repo.</p>
+<p>for a post that’s part of a series, i add a comment like this:</p>
+<pre class="html"><code>&lt;!-- series: arduino --&gt;</code></pre>
+<p>the index script uses that name to group the posts together. if there isn’t a series comment, the post goes under <code>uncategorised</code>. the comment doesn’t show up as text in the post itself.</p>
+<h2 id="markdown-to-html">01 - markdown to html</h2>
+<p>the browser needs a page, so <code>md_to_html.sh</code> uses pandoc to convert the markdown into html. it wraps the result in the site’s layout and styles, and turns obsidian-style links and image embeds into html links and images.</p>
+<pre class="sh"><code>pandoc --from=markdown --to=html --no-highlight --wrap=none post.md</code></pre>
+<p>that’s the conversion part in a nutshell. the script also keeps timestamps in <code>.md_stamps/</code> so it can check which markdown files are new or have changed since the last conversion. the generated html sits next to the markdown file.</p>
+<p>this can run on a schedule on my machine, or i can run it myself with <code>./md_to_html.sh</code>. after conversion it also regenerates the local indexes. i commit and push the markdown and the generated html to github. yes, i still have to push it myself. the scripts haven’t learned to read my mind either.</p>
+<h2 id="pulling-it-onto-the-site">02 - pulling it onto the site</h2>
+<p>the website lives on my home server, served by nginx. a scheduled job runs <code>pull_and_index.sh</code> there. it pulls the repo with <code>git pull --ff-only</code>, then checks if the commit changed. if it did, it regenerates the indexes. it also does that if an index is missing.</p>
+<pre class="sh"><code>before=&quot;$(git rev-parse HEAD)&quot;
+git pull --ff-only --quiet
+after=&quot;$(git rev-parse HEAD)&quot;</code></pre>
+<p>the script uses <code>flock</code> so another run doesn’t start while the previous one is still going. the checked-in cron example runs every five minutes; the actual interval depends on the server’s cron configuration. either way, the scheduled job is just checking for updates. it doesn’t rewrite every post each time.</p>
+<h2 id="finding-the-posts">03 - finding the posts</h2>
+<p><code>generate_indexes.sh</code> scans the html files under <code>blogs/</code> and <code>notes/</code>, takes the title from each page, and writes the links into their respective index pages. for blogs it checks the corresponding markdown for that series comment, then groups the links accordingly. notes get a flat list.</p>
+<p>the index files themselves aren’t tracked in git; the server builds them after pulling. so when i add a post, i don’t have to remember to manually add a link to the blogs page too. i already have enough things to forget.</p>
+<p>so the flow is: write in obsidian, copy the markdown into the repo, convert it, commit and push. the server pulls the update and builds the index. the conversion can be scheduled, which leaves me with the writing, copying and pushing.</p>
+<p>i’ve changed the label at the bottom of the indexes to say what is actually generated. turns out two extra words can save an entire explanation. i wrote the explanation anyway.</p>
+<p>laters! svnu©️ 16-November-2026</p>
+
+<br>
+
+<p class="dim">— auto-converted from markdown</p>
+
+<span class="prompt">sai@svnu.in</span>:<span>$</span>
+
+</body>
+</html>

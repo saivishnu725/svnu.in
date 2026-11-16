@@ -37,7 +37,7 @@ EOF
 
 html_footer() {
 cat <<EOF
-<p class="dim">auto-generated · $(date -u +"%Y-%m-%d %H:%M UTC")</p>
+<p class="dim">this index is generated automatically from the site files · $(date -u +"%Y-%m-%d %H:%M UTC")</p>
 </body>
 </html>
 EOF
@@ -54,7 +54,7 @@ extract_title() {
 extract_series() {
   local source="${1%.html}.md" series=""
   if [[ -f "$source" ]]; then
-    series="$(sed -n 's/^<!-- series: \(.*\) -->$/\1/p' "$source" | head -n1)"
+    series="$(sed -n '/^# /q; s/^<!-- series: \(.*\) -->$/\1/p' "$source" | head -n1)"
   fi
   printf '%s\n' "${series:-uncategorised}"
 }
@@ -87,7 +87,10 @@ while IFS= read -r series; do
     printf '<li><a href="/%s">%s</a></li>\n' "$(escape_html "$rel")" "$title" >> "$BLOG_INDEX"
   done < <(find "$BLOGS_DIR" -type f -name '*.html' ! -name 'index.html' | sort)
   echo '</ul>' >> "$BLOG_INDEX"
-done < <(printf '%s\n' "${!series_seen[@]}" | LC_ALL=C sort)
+done < <(
+  [[ -n "${series_seen[about this site]:-}" ]] && printf '%s\n' 'about this site'
+  printf '%s\n' "${!series_seen[@]}" | LC_ALL=C sort | sed '/^about this site$/d'
+)
 
 if [[ -n "${series_seen[uncategorised]:-}" ]]; then
   printf '<h3>uncategorised</h3>\n<ul>\n' >> "$BLOG_INDEX"

@@ -74,9 +74,10 @@ The script:
 - Generates clean index pages with links
 
 Blog posts can be grouped into a series by adding a comment to their Markdown
-source, for example `<!-- series: arduino -->`. Use the same name for every
-post in the series. The index lists series alphabetically and their posts in
-path order, so numbered filenames keep the reading order. HTML-only posts and
+source before its first heading, for example `<!-- series: arduino -->`. Use
+the same name for every post in the series. The index puts `about this site`
+first, lists other series alphabetically, and lists their posts in path order,
+so numbered filenames keep the reading order. HTML-only posts and
 posts without the comment appear under `uncategorised`. Notes remain a flat
 list.
 

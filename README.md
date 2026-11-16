@@ -23,6 +23,7 @@ No frameworks, no JavaScript, no trackers — just text and files.
 │   ├── index.html          # auto-generated
 │   └── sample_note.html
 ├── generate_indexes.sh     # builds the blog/notes indexes
+├── generate_recent_blogs.sh # updates recent posts on the homepage
 ├── md_to_html.sh           # converts .md posts to .html (run locally)
 ├── pull_and_index.sh       # cron job on the server: git pull + indexes
 ├── cv/
@@ -91,7 +92,12 @@ The repo is cloned at `/root/nginx/html`.
 `pull_and_index.sh` keeps it up to date. Every run it:
 - does a `git pull --ff-only`
 - reruns `generate_indexes.sh` if the pull brought anything new (or an index is missing)
+- updates the homepage's recent blog links after an update
 - skips the run if the previous one is still going (`flock`)
+
+The homepage lists the three blog HTML files with the newest modification
+times. Run `./generate_recent_blogs.sh` to update it locally. File timestamps
+reflect updates and checkouts, so they are not a stable publication date.
 
 So publishing is just: write the post, run `md_to_html.sh` locally, commit, push.
 The server picks it up within 5 minutes.

@@ -22,12 +22,35 @@ fi
 
 cd "$ROOT"
 
+# The homepage is tracked, but its recent-posts section is generated locally.
+# Restore the committed copy before pulling only when that section is the
+# entire difference. This keeps generated links from blocking a future pull
+# without discarding edits elsewhere on the page.
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+git show HEAD:index.html > "$tmp_dir/committed.html"
+strip_recent() {
+  sed '/<!-- recent blogs start -->/,/<!-- recent blogs end -->/{ /<!-- recent blogs start -->/p; /<!-- recent blogs end -->/p; d; }' "$1"
+}
+strip_recent index.html > "$tmp_dir/current.txt"
+strip_recent "$tmp_dir/committed.html" > "$tmp_dir/committed.txt"
+restored=false
+if cmp -s "$tmp_dir/current.txt" "$tmp_dir/committed.txt" && ! cmp -s index.html "$tmp_dir/committed.html"; then
+  cp index.html "$tmp_dir/original.html"
+  cp "$tmp_dir/committed.html" index.html
+  restored=true
+fi
+
 before="$(git rev-parse HEAD)"
-git pull --ff-only --quiet
+if ! git pull --ff-only --quiet; then
+  if [[ "$restored" == true ]]; then cp "$tmp_dir/original.html" index.html; fi
+  exit 1
+fi
 after="$(git rev-parse HEAD)"
 
 if [[ "$before" == "$after" ]] \
   && [[ -f blogs/index.html ]] && [[ -f notes/index.html ]]; then
+  if [[ "$restored" == true ]]; then bash "$ROOT/generate_recent_blogs.sh"; fi
   exit 0   # nothing new, stay quiet
 fi
 
@@ -38,4 +61,5 @@ else
 fi
 
 bash "$ROOT/generate_indexes.sh"
-log "indexes regenerated"
+bash "$ROOT/generate_recent_blogs.sh"
+log "indexes and recent blogs regenerated"
